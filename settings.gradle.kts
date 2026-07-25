@@ -24,4 +24,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "My Practice Application"
 include(":app")
-include(":data")
