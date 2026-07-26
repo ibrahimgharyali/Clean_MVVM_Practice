@@ -46,7 +46,47 @@ class UserViewModelTest {
         val viewmodel = UserViewModel(repository)
         viewmodel.uiState.test {
             assertEquals(UiState.Loading, awaitItem())
-            assertEquals(UiState.Loaded(fakeUsers), awaitItem())
+            assertEquals(UiState.Loaded(fakeUsers, false), awaitItem())
+        }
+    }
+
+    @Test
+    fun `Test refresh fetch user and get success`() = runTest {
+        val fakeUser = listOf(User(1,"refresh test", "test data" ))
+        whenever(repository.getUsers()).thenReturn(Result.success(fakeUser))
+        val viewModel = UserViewModel(repository)
+        viewModel.uiState.test {
+            assertEquals(UiState.Loading, awaitItem())
+            assertEquals(UiState.Loaded(fakeUser, false), awaitItem())
+            // call pull to refresh
+            viewModel.loadData(true)
+            assertEquals(UiState.Loaded(fakeUser, true), awaitItem())
+            assertEquals(UiState.Loaded(fakeUser, false), awaitItem())
+        }
+    }
+    @Test
+    fun `Test refresh fetch user and get error`() = runTest {
+        val e = RuntimeException("Unable to refresh")
+        val fakeUser = listOf(User(1, "test", "refresh data"))
+        whenever(repository.getUsers()).thenReturn(Result.success(fakeUser))
+
+        val viewModel = UserViewModel(repository)
+        
+        // Test both snackbar event and uiState concurrently
+        viewModel.snackBarEvent.test {
+            viewModel.uiState.test {
+                assertEquals(UiState.Loading, awaitItem())
+                assertEquals(UiState.Loaded(fakeUser, false), awaitItem())
+
+                // Mock to return a failure Result instead of throwing raw exception
+                whenever(repository.getUsers()).thenReturn(Result.failure(e))
+                viewModel.loadData(true)
+                
+                assertEquals(UiState.Loaded(fakeUser, true), awaitItem())
+                assertEquals(UiState.Loaded(fakeUser, false), awaitItem())
+            }
+            // Assert error message emitted to snackbar flow
+            assertEquals("Unable to refresh", awaitItem())
         }
     }
 
