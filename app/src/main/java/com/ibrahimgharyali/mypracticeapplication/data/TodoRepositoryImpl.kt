@@ -8,9 +8,7 @@ import javax.inject.Inject
 class TodoRepositoryImpl @Inject constructor(private val apiService: TaskApiService): TodoRepository {
 
     override suspend fun fetchTodoList(): Result<List<Tasks>> = try {
-        val result = apiService.fetchTasks().map { tasksDTO ->
-            Tasks(id = tasksDTO.id,  title = tasksDTO.title, completed = tasksDTO.completed)
-        }
+        val result = apiService.fetchTasks().map { it.toDomain() }
         Result.success(result)
     }
     catch (e: Exception) {

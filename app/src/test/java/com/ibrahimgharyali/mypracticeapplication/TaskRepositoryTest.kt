@@ -46,4 +46,15 @@ class TaskRepositoryTest {
         assertTrue(result.isFailure)
         assertEquals("Unable to fetch data", result.exceptionOrNull()?.message)
     }
+
+    @Test
+    fun `domain model maps from DTO fields`() {
+        val dto = TasksDTO(1, 1, "test1", true)
+
+        val domainTask = dto.toDomain()
+
+        assertEquals(1, domainTask.id)
+        assertEquals("test1", domainTask.title)
+        assertEquals(true, domainTask.completed)
+    }
 }
