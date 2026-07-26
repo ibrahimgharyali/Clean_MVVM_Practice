@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,9 +19,13 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -31,7 +34,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ibrahimgharyali.mypracticeapplication.domain.Tasks
 import com.ibrahimgharyali.mypracticeapplication.presentation.theme.MyPracticeApplicationTheme
-import com.ibrahimgharyali.mypracticeapplication.presentation.ui.UiState
+import com.ibrahimgharyali.mypracticeapplication.presentation.ui.UIState
 import com.ibrahimgharyali.mypracticeapplication.presentation.ui.viewmodel.TaskViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -42,43 +45,57 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MyPracticeApplicationTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MainScreen(modifier = Modifier.padding(innerPadding))
-                }
+                MainScreen(
+                    modifier = Modifier
+                )
             }
         }
     }
 }
 
 @Composable
-fun MainScreen(modifier: Modifier = Modifier, viewModel : TaskViewModel = hiltViewModel()) {
-    val uistate by viewModel.uistate.collectAsStateWithLifecycle()
-    when(val state = uistate) {
-        is UiState.Error -> Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {Text(text = "Error: ${state.e.message}!")}
-        is UiState.Loading -> Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(modifier.height(16.dp)) }
-        is UiState.Loaded -> TaskScreenComposable(
-            modifier = modifier,
-            tasks = state.tasks,
-            onTaskCheckedChange = { taskId -> viewModel.toggleTaskCompletion(taskId) }
-        )
+fun MainScreen(viewModel: TaskViewModel = hiltViewModel(), modifier: Modifier = Modifier) {
+    val uistate by  viewModel.uiState.collectAsStateWithLifecycle()
+    val snackBarhostState = remember { SnackbarHostState() }
+    LaunchedEffect(Unit) {
+        viewModel.snackBarEvent.collect { snackBarhostState.showSnackbar(it) }
+    }
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        snackbarHost = {SnackbarHost(snackBarhostState)}
+    ) { innerPadding ->
+
+        when (val state = uistate) {
+            is UIState.Error -> Box(
+                modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) { Text(text = state.e.message ?: "Something went wrong") }
+
+            is UIState.Loaded -> TaskListScreen(
+                modifier = modifier.padding(innerPadding),
+                tasks = state.tasks,
+                onTaskCheckedChange = { taskId -> viewModel.toggleTaskCompletion(taskId) }
+            )
+            UIState.Loading -> Box(
+                modifier = modifier.fillMaxSize().padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) { CircularProgressIndicator(modifier.padding(4.dp)) }
+        }
     }
 }
 
 @Composable
-fun TaskScreenComposable(
+fun TaskListScreen(
     modifier: Modifier = Modifier,
     tasks: List<Tasks>,
     onTaskCheckedChange: (Int) -> Unit
 ) {
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(8.dp)
-    ) {
+    LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(8.dp)) {
         items(
             items = tasks,
-            key = {task -> task.id}
+            key = {it.id}
         ){ task ->
-            TaskRow(
+            TaskItem(
                 task = task,
                 onCheckedChange = { onTaskCheckedChange(task.id) }
             )
@@ -87,7 +104,11 @@ fun TaskScreenComposable(
 }
 
 @Composable
-fun TaskRow(modifier: Modifier = Modifier, task: Tasks, onCheckedChange: (Boolean) -> Unit) {
+fun TaskItem(
+    task: Tasks,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -117,8 +138,8 @@ fun TaskRow(modifier: Modifier = Modifier, task: Tasks, onCheckedChange: (Boolea
 @Composable
 fun MainScreenPreview() {
     MyPracticeApplicationTheme {
-        TaskScreenComposable(
-            tasks = listOf(Tasks(1, "title", true), Tasks(2, "title 2", false)),
+        TaskListScreen(
+            tasks = listOf(Tasks(1, "tite1", true), Tasks(2, "tite2", true)),
             onTaskCheckedChange = {}
         )
     }

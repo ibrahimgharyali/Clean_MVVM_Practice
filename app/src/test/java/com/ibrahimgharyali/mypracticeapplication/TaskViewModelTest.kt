@@ -3,7 +3,7 @@ package com.ibrahimgharyali.mypracticeapplication
 import app.cash.turbine.test
 import com.ibrahimgharyali.mypracticeapplication.data.TaskRepositoryImpl
 import com.ibrahimgharyali.mypracticeapplication.domain.Tasks
-import com.ibrahimgharyali.mypracticeapplication.presentation.ui.UiState
+import com.ibrahimgharyali.mypracticeapplication.presentation.ui.UIState
 import com.ibrahimgharyali.mypracticeapplication.presentation.ui.viewmodel.TaskViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -43,9 +43,9 @@ class TaskViewModelTest {
         whenever(repository.fetchDataList()).thenReturn(Result.success(tasklist))
 
         val viewmodel = TaskViewModel(repository)
-        viewmodel.uistate.test {
-            assertEquals(UiState.Loading, awaitItem())
-            assertEquals(UiState.Loaded(tasklist), awaitItem())
+        viewmodel.uiState.test {
+            assertEquals(UIState.Loading, awaitItem())
+            assertEquals(UIState.Loaded(tasklist), awaitItem())
         }
     }
 
@@ -56,9 +56,9 @@ class TaskViewModelTest {
         whenever(repository.fetchDataList()).thenReturn(Result.failure(error))
 
         val viewmodel = TaskViewModel(repository)
-        viewmodel.uistate.test {
-            assertEquals(UiState.Loading, awaitItem())
-            assertEquals(UiState.Error(error), awaitItem())
+        viewmodel.uiState.test {
+            assertEquals(UIState.Loading, awaitItem())
+            assertEquals(UIState.Error(error), awaitItem())
         }
     }
 
