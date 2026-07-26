@@ -1,7 +1,7 @@
 package com.ibrahimgharyali.mypracticeapplication
 
 import app.cash.turbine.test
-import com.ibrahimgharyali.mypracticeapplication.data.TodoRepositoryImpl
+import com.ibrahimgharyali.mypracticeapplication.data.TaskRepositoryImpl
 import com.ibrahimgharyali.mypracticeapplication.domain.Tasks
 import com.ibrahimgharyali.mypracticeapplication.presentation.ui.UiState
 import com.ibrahimgharyali.mypracticeapplication.presentation.ui.viewmodel.TaskViewModel
@@ -15,46 +15,52 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito.mock
+import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TaskViewModelTest {
 
+    val repository: TaskRepositoryImpl = mock()
     val dispatcher = StandardTestDispatcher()
-    val repository: TodoRepositoryImpl = mock()
 
     @Before
-    fun setup() {
+    fun setup(){
         Dispatchers.setMain(dispatcher)
     }
 
     @After
-    fun teardown() {
+    fun teardown(){
         Dispatchers.resetMain()
     }
 
     @Test
-    fun `Load task list and get success`() = runTest {
-        val task = listOf(Tasks(1, "title", false))
-        whenever(repository.fetchTodoList()).thenReturn(Result.success(task))
+    fun `Test viewmodel loadData gets success`() = runTest {
+        val tasklist = listOf(
+            Tasks(1, "title 1", true),
+            Tasks(2, "title 2", false)
+            )
+        whenever(repository.fetchDataList()).thenReturn(Result.success(tasklist))
 
         val viewmodel = TaskViewModel(repository)
         viewmodel.uistate.test {
             assertEquals(UiState.Loading, awaitItem())
-            assertEquals(UiState.Loaded(task), awaitItem())
+            assertEquals(UiState.Loaded(tasklist), awaitItem())
         }
     }
 
     @Test
-    fun `Load task list and get error`() = runTest {
-        val error = RuntimeException("Cannot fetch task list")
-        whenever(repository.fetchTodoList()).thenReturn(Result.failure(error))
+    fun `Test viewmodel loadData gets error`() = runTest {
+
+        val error = RuntimeException("Something went wrong")
+        whenever(repository.fetchDataList()).thenReturn(Result.failure(error))
 
         val viewmodel = TaskViewModel(repository)
         viewmodel.uistate.test {
             assertEquals(UiState.Loading, awaitItem())
-            assertEquals(UiState.Error(error), awaitItem() )
+            assertEquals(UiState.Error(error), awaitItem())
         }
     }
+
+
 }
