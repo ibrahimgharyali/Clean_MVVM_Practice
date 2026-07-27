@@ -1,9 +1,8 @@
 package com.ibrahimgharyali.mypracticeapplication.presentation.ui
 
-import com.ibrahimgharyali.mypracticeapplication.domain.Tasks
-
 sealed class UIState {
+    data class Idle(val emailError: String? = null, val passwordError: String? = null): UIState()
     object Loading: UIState()
-    data class Loaded(val tasks: List<Tasks>): UIState()
+    object Success: UIState()
     data class Error(val e: Exception): UIState()
 }
