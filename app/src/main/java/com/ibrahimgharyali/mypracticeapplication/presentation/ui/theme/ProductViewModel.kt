@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 sealed class ProdState {
-    object Loading: ProdState()
+    data object Loading: ProdState()
     data class Loaded(val list: List<Product>): ProdState()
     data class Error(val message: String): ProdState()
 }

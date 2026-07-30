@@ -10,6 +10,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
 class ProductUseCaseTest {
@@ -61,6 +63,18 @@ class ProductUseCaseTest {
         // Then
         assertTrue(res.isFailure)
         assertEquals(exce, res.exceptionOrNull())
+    }
+    @Test
+    fun `getProductsFiltered returns never when repository does not call`() = runTest {
+        // Given
+        val exce = Exception("Incorrect min price")
+
+        // When
+        val res =  useCase.getProductsFiltered(-20.0)
+        // Then
+        assertTrue(res.isFailure)
+        verify(repository, never()).getProducts()
+        assertEquals(exce.message, res.exceptionOrNull()?.message)
     }
 
 
