@@ -14,6 +14,6 @@ class ProductRepositoryImpl @Inject constructor(val apiService: ProductApiServic
         Result.success(products)
     }
     catch (e: Exception) {
-        Result.failure(Exception(e))
+        Result.failure(e)
     }
 }

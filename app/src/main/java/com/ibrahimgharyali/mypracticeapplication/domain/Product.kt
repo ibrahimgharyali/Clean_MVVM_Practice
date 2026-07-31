@@ -1,6 +1,6 @@
 package com.ibrahimgharyali.mypracticeapplication.domain
 
-class Product(
+data class Product(
     val id: Int,
     val title: String,
     val desc: String,
